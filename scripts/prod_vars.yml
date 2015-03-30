@@ -1,0 +1,7 @@
+db_name: prod
+db_user: prod_user 
+db_password: prod_password
+create_db_schema: true 
+add_cron: true
+other_host_ip: 192.168.33.11 
+other_host_name: dev
