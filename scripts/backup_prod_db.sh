@@ -2,7 +2,7 @@
 
 # Backup the prod db and remove previous copy on success
 
-mysqldump --add-drop prod_db | gzip -c  > /backups/prod_db_new.sql.gz
+mysqldump -u root --add-drop-table prod | gzip -c  > /backups/prod_db_new.sql.gz
 
 
 if [ $? -eq 0 ]; then

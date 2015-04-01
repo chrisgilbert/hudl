@@ -13,7 +13,9 @@ create table if not exists hudl_users (
 -- Generate a pseudo random salt with rand() and md5()
 -- Create 10 user accounts with password + n as the password
 
-DELIMITER §
+
+DROP PROCEDURE IF EXISTS ADD_USERS;
+DELIMITER $$
 
 CREATE PROCEDURE ADD_USERS()
 BEGIN
@@ -22,26 +24,32 @@ declare salt varchar(50);
 declare pass varchar(50);
 declare email varchar(255);
 declare n integer(1);
+declare nc varchar(4);
 
-SET n = 0;
+SET @n := 0;
 
 user_loop: LOOP
 
-  SET n = n + 1;
-  SET user = 'USER' +n;
-  SET salt = md5(rand());
-  SET pass = 'password' + n;
-  SET email = 'user' + n +'@hudl.com';
+  SET @n := @n + 1;
+  SET @nc := cast(@n as char);
+  SET @user := concat("USER", @nc);
+  SET @salt := md5(rand());
+  SET @pass := concat("password", @nc);
+  SET @email := concat("user", @nc, "@hudl.com");
 
-  INSERT INTO hudl_users(id, username, password_salt, hashed_password, email, phone_number)
-  VALUES(null, @user, @salt, sha2(@pass + @salt, 256), @email, '001 101 101101');
+  select @n, @user, @salt, @pass, @email;
 
-  IF n < 10 THEN
+  REPLACE INTO hudl_users(id, username, password_salt, hashed_password, email, phone_number) VALUES(null, @user, @salt, sha2(concat(@pass, @salt), 256), @email, "001 101 101101");
+
+  IF @n < 10 THEN
    ITERATE user_loop;
   END IF;
   LEAVE user_loop;
 
 END LOOP user_loop;
+commit;
 
-END§;
+END$$
+
+call add_users();
 

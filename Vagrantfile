@@ -8,36 +8,34 @@ Vagrant.configure(2) do |config|
     prod.vm.hostname = "prod"
     prod.vm.box = "puppetlabs/centos-7.0-64-nocm"
 
-    prod.vm.network "forwarded_port", guest: 3306, host: 3307
-    prod.vm.network "private_network", ip: "192.168.33.10"
+    prod.vm.network "private_network", ip: "10.42.42.42"
 
     prod.vm.synced_folder "./scripts", "/scripts"
 
     prod.vm.provision "shell", inline: <<-SHELL
-      yum -y update
+      echo Installing prerequisites.
       yum -y install http://www.mirrorservice.org/sites/dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
       yum -y install ansible
-      ansible-playbook -S /scripts/setup_mysql.yml --extra-vars "db_name=prod db_user=prod_user\
-        db_password=prod_password create_db_schema=true add_cron=yes"
-      sudo echo "192.168.33.11 dev >> /etc/hosts"
+      echo Running ansible playbook.
+      ansible-playbook -v -S /scripts/setup_mysql.yml -e @/scripts/prod_vars.yml
     SHELL
 
   end
 
-  config.vm.define "dev" do |dev|
-    dev.vm.hostname = "dev"
-    dev.vm.box = "puppetlabs/centos-7.0-64-nocm"
+  config.vm.define "test" do |test|
+    test.vm.hostname = "test"
+    test.vm.box = "puppetlabs/centos-7.0-64-nocm"
 
-    dev.vm.network "forwarded_port", guest: 3306, host: 3308
-    dev.vm.network "private_network", ip: "192.168.33.11"
+    test.vm.network "private_network", ip: "10.42.42.43"
 
-    dev.vm.synced_folder "./scripts", "/scripts"
+    test.vm.synced_folder "./scripts", "/scripts"
 
-    dev.vm.provision "shell", inline: <<-SHELL
-      yum -y update
+    test.vm.provision "shell", inline: <<-SHELL
+      echo Installing prerequisites.
       yum -y install http://www.mirrorservice.org/sites/dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
       yum -y install ansible
-      ansible-playbook -S /scripts/setup_mysql.yml --extra-vars "db_name=dev db_user=dev_user db_password=dev_password"
+      echo Running ansible playbook.
+      ansible-playbook -v -S /scripts/setup_mysql.yml -e @/scripts/test_vars.yml 
     SHELL
 
   end

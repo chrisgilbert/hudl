@@ -3,5 +3,5 @@ db_user: prod_user
 db_password: prod_password
 create_db_schema: true 
 add_cron: true
-other_host_ip: 192.168.33.11 
-other_host_name: dev
+other_host_ip: 10.42.42.43
+other_host_name: test

@@ -1,7 +1,7 @@
 - hosts: localhost
   vars:
-  - create_db_schema: no
-  - add_cron: no
+  - create_db_schema: false
+  - add_cron: false
   tasks:
   
   - name: Install MariaDB
@@ -13,6 +13,9 @@
   - name: Setup MariaDB Service
     service: name=mariadb enabled=true state=started
 
+  - name: Open firewall port
+    firewalld: service=mysql permanent=true state=enabled
+
   - name: Create a database
     mysql_db: name={{db_name}} state=present encoding=utf8
 
@@ -21,11 +24,21 @@
     mysql_db: name={{db_name}} state=import target=/scripts/create_db.sql
      
   - name: Create DB user
-    mysql_user: name={{db_user}} password={{db_password}} priv={{db_name}}.*:all state=present
+    mysql_user: name={{db_user}} host=% password={{db_password}} priv={{db_name}}.*:all state=present
 
   - name: Create a backup directory
     file: name=/backups state=directory owner=root group=root mode=700
+
+  - name: Set file permissions
+    file: name={{item}} mode=755 
+    with_items:
+    - /scripts/backup_prod_db.sh
+    - /scripts/restore_to_test.sh
+
+  - name: Add /etc/hosts entry
+    lineinfile: dest=/etc/hosts line="{{other_host_ip}} {{other_host_name}}" owner=root group=root mode=0644
       
   - name: Add backup cron job
     when: add_cron
-    cron: user=root special_time=daily job=/scripts/backup_prod_db.sh && /scripts/restore_dev_db.sh
+    cron: user=root special_time=daily job="/scripts/backup_prod_db.sh && /scripts/restore_to_test.sh" name="Backup and restore to test"
+

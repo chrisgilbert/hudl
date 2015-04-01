@@ -1,0 +1,5 @@
+db_name: test 
+db_user: test_user 
+db_password: test_password
+other_host_ip: 10.42.42.42
+other_host_name: prod
