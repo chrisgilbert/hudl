@@ -14,7 +14,8 @@
     service: name=mariadb enabled=true state=started
 
   - name: Open firewall port
-    firewalld: service=mysql permanent=true state=enabled
+    firewalld: service=mysql permanent=true state=enabled 
+    notify: restart firewalld
 
   - name: Create a database
     mysql_db: name={{db_name}} state=present encoding=utf8
@@ -41,4 +42,8 @@
   - name: Add backup cron job
     when: add_cron
     cron: user=root special_time=daily job="/scripts/backup_prod_db.sh && /scripts/restore_to_test.sh" name="Backup and restore to test"
+  
+  handlers:
+  - name: restart firewalld
+    service: name=firewalld state=restarted
 
